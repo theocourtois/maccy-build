@@ -34,6 +34,13 @@ jobs:
             DEVELOPMENT_TEAM= \
             PROVISIONING_PROFILE_SPECIFIER=
 
+      - name: Re-sign whole bundle ad-hoc (embedded frameworks keep their own Team ID otherwise)
+        run: |
+          APP=build/Build/Products/Release/Maccy.app
+          codesign --force --deep --sign - --timestamp=none "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          for f in "$APP"/Contents/Frameworks/*.framework; do codesign -dv "$f" 2>&1 | grep -E "Signature|TeamIdentifier"; done
+
       - name: Zip app
         run: |
           ditto -c -k --sequesterRsrc --keepParent \
