@@ -1,0 +1,45 @@
+name: Build Maccy PR 1555
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - name: Checkout Maccy PR 1555
+        uses: actions/checkout@v4
+        with:
+          repository: p0deje/Maccy
+          ref: refs/pull/1555/head
+          submodules: recursive
+
+      - name: Show Xcode
+        run: |
+          xcodebuild -version
+          xcodebuild -list
+
+      - name: Build (Release, ad-hoc signed)
+        run: |
+          xcodebuild build \
+            -project Maccy.xcodeproj \
+            -scheme Maccy \
+            -configuration Release \
+            -derivedDataPath build \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            CODE_SIGN_IDENTITY=- \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=YES \
+            DEVELOPMENT_TEAM= \
+            PROVISIONING_PROFILE_SPECIFIER=
+
+      - name: Zip app
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/Build/Products/Release/Maccy.app Maccy-PR1555.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Maccy-PR1555
+          path: Maccy-PR1555.zip
